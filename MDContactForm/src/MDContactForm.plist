@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>MDContactForm_Title</key>
+	<string>Feedback</string>
+	<key>MDContactForm_Message</key>
+	<string>Please fill out the following form and we&apos;ll get in touch soon! Thank you for your feedback!</string>
+	<key>MDContactForm_SubmitTitle</key>
+	<string>Submit!</string>
+	<key>MDContactForm_SubmitURL</key>
+	<string>http://www.mikecheck.net/issueReport.php</string>
+	<key>MDContactForm_SubmitSuccessMessage</key>
+	<string>Thank you for your feedback! We really appreciate it!</string>
+	<key>MDContactForm_SubmitFailed</key>
+	<string>Sorry! Looks like we can&apos;t access the server to submit the form right now. Please try again later.</string>
+	<key>MDContactForm_Items</key>
+	<array>
+		<dict>
+			<key>MDContactForm_InputType</key>
+			<integer>2</integer>
+			<key>MDContactForm_InputIdentifier</key>
+			<string>problemLocation</string>
+			<key>MDContactForm_InputValue</key>
+			<string>Textwiz In-App Form</string>
+		</dict>
+		<dict>
+			<key>MDContactForm_InputType</key>
+			<integer>0</integer>
+			<key>MDContactForm_InputIdentifier</key>
+			<string>name</string>
+			<key>MDContactForm_InputTextPlaceholder</key>
+			<string>name</string>
+			<key>MDContactForm_InputRequired</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>MDContactForm_InputType</key>
+			<integer>0</integer>
+			<key>MDContactForm_InputIdentifier</key>
+			<string>email</string>
+			<key>MDContactForm_InputTextPlaceholder</key>
+			<string>email</string>
+			<key>MDContactForm_InputRequired</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>MDContactForm_InputType</key>
+			<integer>0</integer>
+			<key>MDContactForm_InputIdentifier</key>
+			<string>phone</string>
+			<key>MDContactForm_InputTextPlaceholder</key>
+			<string>phone</string>
+			<key>MDContactForm_InputRequired</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>MDContactForm_InputType</key>
+			<integer>1</integer>
+			<key>MDContactForm_InputDisplayName</key>
+			<string>Comments</string>
+			<key>MDContactForm_InputIdentifier</key>
+			<string>comments</string>
+			<key>MDContactForm_InputRequired</key>
+			<true/>
+			<key>MDContactForm_InputHeight</key>
+			<integer>80</integer>
+			<key>MDContactForm_InputFontSize</key>
+			<string>16</string>
+		</dict>
+	</array>
+</dict>
+</plist>
