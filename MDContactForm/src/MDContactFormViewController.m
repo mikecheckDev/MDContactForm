@@ -11,6 +11,8 @@
 //  For questions/support contact me here:
 //  mike@mikecheck.net or http://mikecheck.net
 
+#pragma mark - Constants
+
 //Adjust this value to expand or squish all items vertically (For example, if you want everything to fit on a single page!)
 #define kVerticalSpacing 12.0f
 
@@ -62,35 +64,142 @@ typedef enum _MDFormInputTypes {
     kMDContactFormTextField = 0,
     kMDContactFormTextView = 1,
     kMDContactFormHidden = 2
-    } MDFormInputTypes;
+} MDFormInputTypes;
 
 #import "MDTextField.h"
 #import "MDTextView.h"
 #import "MDContactFormViewController.h"
 #import <QuartzCore/QuartzCore.h>
 
-@interface MDContactFormViewController ()
-
-@end
-
+#pragma mark - Implementation
 @implementation MDContactFormViewController
 @synthesize contentView;
 @synthesize scrollView;
 
-- (void)submitForm:(id)sender {
+#pragma mark -
 
-    NSMutableArray *missingFields = [[NSMutableArray alloc] init];
+- (void)viewDidLoad {
 
+    [super viewDidLoad];
+    
+    NSDictionary *plistData = [self plistData];
+    
+    [self buildView:plistData];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+#pragma mark - Generate View
+- (void)buildView:(NSDictionary *)viewDictionary {
+    
+    //clean contentView
     for (UIView *view in self.contentView.subviews) {
+        [view removeFromSuperview];
+    }
+    CGRect contentFrame = self.contentView.frame;
+    contentFrame.size.height = 0.0;
+    [self.contentView setFrame:contentFrame];
+    
+    //title
+    id title = [viewDictionary objectForKey:kMDFormTitleKey];
+    if ([self isString:title]) {
+        self.navigationItem.title = title;
+        self.title = title;
+    }
+    
+    //message
+    id message = [viewDictionary objectForKey:kMDFormMessageKey];
+    if ([self isString:message]) {
+        [self addLabel:message alignment:UITextAlignmentCenter];
+    }
+    
+    //inputs
+    id inputItems = [viewDictionary objectForKey:kMDFormItemsKey];
+    if ([self isArray:inputItems]) {
+        
+        for (NSInteger i = 0; i < [inputItems count]; i++) {
+            
+            id itemDictionary = [inputItems objectAtIndex:i];
+            if ([self isDictionary:itemDictionary]) {
+                
+                //display label if needed
+                id displayName = [itemDictionary objectForKey:kMDFormInputDisplayNameKey];
+                if ([self isString:displayName]) {
+                    [self addLabel:displayName alignment:UITextAlignmentLeft];
+                }
+                
+                //displayField
+                MDFormInputTypes inputType = [[itemDictionary objectForKey:kMDFormInputTypeKey] integerValue];
+                switch (inputType) {
+                    case kMDContactFormTextField:
+                        [self addTextField:itemDictionary];
+                        break;
+                    case kMDContactFormTextView:
+                        [self addTextView:itemDictionary];
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+    
+    //submit button
+    CGRect submitButtonFrame = CGRectMake((self.contentView.frame.size.width - kSubmitButtonWidth) / 2.0f, self.contentView.frame.size.height + kVerticalSpacing, kSubmitButtonWidth, kSubmitButtonHeight);
+    UIButton *submit = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    [submit setFrame:submitButtonFrame];
+    [submit setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [submit setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
+    [submit addTarget:self action:@selector(submitForm:) forControlEvents:UIControlEventTouchUpInside];
+    
+    //submit button title
+    id submitTitle = [viewDictionary objectForKey:kMDFormSubmitTitleKey];
+    if ([self isString:submitTitle]) {
+        [submit setTitle:submitTitle forState:UIControlStateNormal];
+    } else {
+        [submit setTitle:@"Submit" forState:UIControlStateNormal];
+    }
+    [self addView:submit];
+    
+    //bottom border
+    contentFrame = self.contentView.frame;
+    contentFrame.size.height += 2.0f * kVerticalSpacing;
+    self.contentView.frame = contentFrame;
+    self.scrollView.contentSize = self.contentView.bounds.size;
+    
+    //backgroundTap
+    UIButton *bgTap = [UIButton buttonWithType:UIButtonTypeCustom];
+    bgTap.frame = CGRectMake(0.0, 0.0, self.contentView.bounds.size.width, self.contentView.bounds.size.height);
+    [bgTap addTarget:self action:@selector(bgTap:) forControlEvents:UIControlEventTouchUpInside];
+    [self.contentView insertSubview:bgTap atIndex:0];
+}
 
+#pragma mark - Actions
+#pragma mark Submit
+- (void)submitForm:(id)sender {
+    
+    NSMutableArray *missingFields = [[NSMutableArray alloc] init];
+    
+    for (UIView *view in self.contentView.subviews) {
+        
         if ([view isKindOfClass:[MDTextView class]]) {
-
+            
             MDTextView *textView = (MDTextView *)view;
             if (textView.isRequired && (textView.text == nil || textView.text.length == 0)) {
                 [missingFields addObject:textView];
             }
         } else if ([view isKindOfClass:[MDTextField class]]) {
-
+            
             MDTextField *textField = (MDTextField *)view;
             if (textField.isRequired && (textField.text == nil || textField.text.length == 0)) {
                 [missingFields addObject:textField];
@@ -99,29 +208,29 @@ typedef enum _MDFormInputTypes {
     }
     
     if ([missingFields count] == 0) {
-
+        
         [self sendFormRequest];
     } else {
         
         UIColor *missingBackgroundColor = [UIColor redColor];
         for (UIView *view in missingFields) {
-
+            
             view.layer.borderWidth = 2.0f;
             view.layer.borderColor = missingBackgroundColor.CGColor;
         }
-
+        
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Required Field" message:@"Please fill in all required fields. (They have been outlined in red.)" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
         [alert show];
     }
 }
 
 - (void)sendFormRequest {
-
+    
     NSDictionary *plistData = [self plistData];
-
+    
     id submitURL = [plistData objectForKey:kMDFormSubmitURLKey];
     if ([self isString:submitURL]) {
-
+        
         //build request string
         NSMutableString *requestString = [[NSMutableString alloc] init];
         for (UIView *view in self.contentView.subviews) {
@@ -150,7 +259,7 @@ typedef enum _MDFormInputTypes {
                     MDFormInputTypes inputType = [[itemDictionary objectForKey:kMDFormInputTypeKey] integerValue];
                     switch (inputType) {
                         case kMDContactFormHidden: {
-                         
+                            
                             id postName = [itemDictionary objectForKey:kMDFormInputIdKey];
                             id postValue = [itemDictionary objectForKey:kMDFormInputValueKey];
                             if ([self isString:postName] && postValue != nil) {
@@ -171,7 +280,7 @@ typedef enum _MDFormInputTypes {
         [request setHTTPMethod:@"POST"];
         [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"content-type"];
         [request setHTTPBody:postData];
-
+        
         __weak id weakSelf = self;
         [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
             NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
@@ -188,8 +297,9 @@ typedef enum _MDFormInputTypes {
     }
 }
 
+#pragma Submit Responses
 - (void)submitSucceeded {
-
+    
     [self bgTap:nil];
     
     //clear fields
@@ -209,7 +319,7 @@ typedef enum _MDFormInputTypes {
     NSDictionary *plistData = [self plistData];
     id successMsg = [plistData objectForKey:kMDFormSubmitSuccessMessageKey];
     if ([self isString:successMsg]) {
-
+        
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Success" message:successMsg delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
         [alert show];
     } else {
@@ -219,12 +329,12 @@ typedef enum _MDFormInputTypes {
 }
 
 - (void)submitFailed:(NSError *)error {
-
+    
     NSString *errorDesc = @"";
     if (error != nil && error.description != nil) {
         errorDesc = [NSString stringWithFormat:@" (%@)",error.description];
     }
-
+    
     NSDictionary *plistData = [self plistData];
     id errorMsg = [plistData objectForKey:kMDFormSubmitFailedKey];
     if ([self isString:errorMsg]) {
@@ -232,154 +342,15 @@ typedef enum _MDFormInputTypes {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[NSString stringWithFormat:@"%@%@", errorMsg, errorDesc] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
         [alert show];
     } else {
-
+        
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[NSString stringWithFormat:@"Sorry an error occurred. Please try again later. %@", errorDesc] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
         [alert show];
     }
 }
 
-- (NSString *)encodedString:(NSString *)string {
-
-    if (string == nil) {
-        return @"";
-    }
-
-    return (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,(__bridge CFStringRef)string, NULL, (CFStringRef)@"!*'();:@&=+$,/?%#[]", kCFStringEncodingUTF8 );
-}
-
-- (void)viewDidLoad {
-
-    [super viewDidLoad];
-    
-    NSDictionary *plistData = [self plistData];
-    
-    [self buildView:plistData];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
-}
-
-- (void)keyboardWillShow:(NSNotification *)notification {
- 
-    NSDictionary *userInfo = [notification userInfo];
-    CGRect keyboardFrame = [[userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
-    CGRect convertedKeyboardFrame = [self.scrollView.window convertRect:keyboardFrame toView:self.scrollView];
-    CGRect intersection = CGRectIntersection(self.scrollView.frame, convertedKeyboardFrame);
-
-    CGRect scrollViewFrame = self.scrollView.frame;
-    scrollViewFrame.size.height -= intersection.size.height;
-    [UIView animateWithDuration:[[userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue]
-                          delay:0.0
-                        options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-                              self.scrollView.frame = scrollViewFrame;
-                          }
-                     completion:^(BOOL finished) {
-                              
-                          }];
-}
-
-- (void)keyboardWillHide:(NSNotification *)notification {
-
-    NSDictionary *userInfo = [notification userInfo];
-
-    CGRect scrollViewFrame = self.scrollView.frame;
-    scrollViewFrame.size.height = self.scrollView.superview.frame.size.height;
-    [UIView animateWithDuration:[[userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue]
-                          delay:0.0
-                        options:UIViewAnimationOptionBeginFromCurrentState animations:^{
-                            self.scrollView.frame = scrollViewFrame;
-                        }
-                     completion:^(BOOL finished) {
-                         
-                     }];
-}
-
-- (void)buildView:(NSDictionary *)viewDictionary {
-
-    //clean contentView
-    for (UIView *view in self.contentView.subviews) {
-        [view removeFromSuperview];
-    }
-    CGRect contentFrame = self.contentView.frame;
-    contentFrame.size.height = 0.0;
-    [self.contentView setFrame:contentFrame];
-
-    //title
-    id title = [viewDictionary objectForKey:kMDFormTitleKey];
-    if ([self isString:title]) {
-        self.navigationItem.title = title;
-        self.title = title;
-    }
-
-    //message
-    id message = [viewDictionary objectForKey:kMDFormMessageKey];
-    if ([self isString:message]) {
-        [self addLabel:message alignment:UITextAlignmentCenter];
-    }
-    
-    //inputs
-    id inputItems = [viewDictionary objectForKey:kMDFormItemsKey];
-    if ([self isArray:inputItems]) {
-     
-        for (NSInteger i = 0; i < [inputItems count]; i++) {
-            
-            id itemDictionary = [inputItems objectAtIndex:i];
-            if ([self isDictionary:itemDictionary]) {
-                
-                //display label if needed
-                id displayName = [itemDictionary objectForKey:kMDFormInputDisplayNameKey];
-                if ([self isString:displayName]) {
-                    [self addLabel:displayName alignment:UITextAlignmentLeft];
-                }
-
-                //displayField
-                MDFormInputTypes inputType = [[itemDictionary objectForKey:kMDFormInputTypeKey] integerValue];
-                switch (inputType) {
-                    case kMDContactFormTextField:
-                        [self addTextField:itemDictionary];
-                        break;
-                    case kMDContactFormTextView:
-                        [self addTextView:itemDictionary];
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-    }
-    
-    //submit button
-    CGRect submitButtonFrame = CGRectMake((self.contentView.frame.size.width - kSubmitButtonWidth) / 2.0f, self.contentView.frame.size.height + kVerticalSpacing, kSubmitButtonWidth, kSubmitButtonHeight);
-    UIButton *submit = [UIButton buttonWithType:UIButtonTypeRoundedRect];
-    [submit setFrame:submitButtonFrame];
-    [submit setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    [submit setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
-    [submit addTarget:self action:@selector(submitForm:) forControlEvents:UIControlEventTouchUpInside];
-
-    //submit button title
-    id submitTitle = [viewDictionary objectForKey:kMDFormSubmitTitleKey];
-    if ([self isString:submitTitle]) {
-        [submit setTitle:submitTitle forState:UIControlStateNormal];
-    } else {
-        [submit setTitle:@"Submit" forState:UIControlStateNormal];
-    }
-    [self addView:submit];
-
-    //bottom border
-    contentFrame = self.contentView.frame;
-    contentFrame.size.height += 2.0f * kVerticalSpacing;
-    self.contentView.frame = contentFrame;
-    self.scrollView.contentSize = self.contentView.bounds.size;
-
-    //backgroundTap
-    UIButton *bgTap = [UIButton buttonWithType:UIButtonTypeCustom];
-    bgTap.frame = CGRectMake(0.0, 0.0, self.contentView.bounds.size.width, self.contentView.bounds.size.height);
-    [bgTap addTarget:self action:@selector(bgTap:) forControlEvents:UIControlEventTouchUpInside];
-    [self.contentView insertSubview:bgTap atIndex:0];
-}
-
+#pragma mark Etc
 - (void)bgTap:(id)sender {
-
+    
     for (UIView *view in self.contentView.subviews) {
         if ([view respondsToSelector:@selector(resignFirstResponder)]) {
             [view resignFirstResponder];
@@ -387,19 +358,8 @@ typedef enum _MDFormInputTypes {
     }
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
-
-    return (interfaceOrientation == UIInterfaceOrientationPortrait);
-}
-
-- (NSDictionary *)plistData {
-
-    NSString *plistPath = [[NSBundle mainBundle] pathForResource:kMDContactFormFileName ofType:@"plist"];
-    return [[NSDictionary alloc] initWithContentsOfFile:plistPath];
-}
-
 #pragma mark - Helpers
-
+#pragma mark Add Form Elements
 - (void)addLabel:(NSString *)text alignment:(UITextAlignment)textAlignment {
 
     CGRect labelFrame = CGRectMake(kLeftLabelInset, self.contentView.frame.size.height + kVerticalSpacing, self.contentView.frame.size.width - kLeftLabelInset - kRightLabelInset, kVeryLargeLabelHeight);
@@ -509,6 +469,14 @@ typedef enum _MDFormInputTypes {
     self.scrollView.contentSize = self.contentView.bounds.size;
 }
 
+#pragma mark Plist data
+- (NSDictionary *)plistData {
+    
+    NSString *plistPath = [[NSBundle mainBundle] pathForResource:kMDContactFormFileName ofType:@"plist"];
+    return [[NSDictionary alloc] initWithContentsOfFile:plistPath];
+}
+
+#pragma mark Validation
 - (BOOL)isString:(id)val {
 
     return (val != nil && [val isKindOfClass:[NSString class]]);
@@ -524,6 +492,52 @@ typedef enum _MDFormInputTypes {
 
 - (BOOL)isNumber:(id)val {
     return (val != nil && [val isKindOfClass:[NSNumber class]]);
+}
+
+#pragma mark Encoding
+- (NSString *)encodedString:(NSString *)string {
+    
+    if (string == nil) {
+        return @"";
+    }
+    
+    return (__bridge_transfer NSString *)CFURLCreateStringByAddingPercentEscapes(NULL,(__bridge CFStringRef)string, NULL, (CFStringRef)@"!*'();:@&=+$,/?%#[]", kCFStringEncodingUTF8 );
+}
+
+#pragma mark - Keyboard Notifications
+- (void)keyboardWillShow:(NSNotification *)notification {
+    
+    NSDictionary *userInfo = [notification userInfo];
+    CGRect keyboardFrame = [[userInfo objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    CGRect convertedKeyboardFrame = [self.scrollView.window convertRect:keyboardFrame toView:self.scrollView];
+    CGRect intersection = CGRectIntersection(self.scrollView.frame, convertedKeyboardFrame);
+    
+    CGRect scrollViewFrame = self.scrollView.frame;
+    scrollViewFrame.size.height -= intersection.size.height;
+    [UIView animateWithDuration:[[userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue]
+                          delay:0.0
+                        options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+                            self.scrollView.frame = scrollViewFrame;
+                        }
+                     completion:^(BOOL finished) {
+                         
+                     }];
+}
+
+- (void)keyboardWillHide:(NSNotification *)notification {
+    
+    NSDictionary *userInfo = [notification userInfo];
+    
+    CGRect scrollViewFrame = self.scrollView.frame;
+    scrollViewFrame.size.height = self.scrollView.superview.frame.size.height;
+    [UIView animateWithDuration:[[userInfo objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue]
+                          delay:0.0
+                        options:UIViewAnimationOptionBeginFromCurrentState animations:^{
+                            self.scrollView.frame = scrollViewFrame;
+                        }
+                     completion:^(BOOL finished) {
+                         
+                     }];
 }
 
 @end
