@@ -22,6 +22,8 @@
 		F584BF8915CD91670005E1A5 /* LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = F584BF8715CD91670005E1A5 /* LICENSE.md */; };
 		F584BF8A15CD91670005E1A5 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = F584BF8815CD91670005E1A5 /* README.md */; };
 		F584BF8C15CD980E0005E1A5 /* issueReport.php in Resources */ = {isa = PBXBuildFile; fileRef = F584BF8B15CD980E0005E1A5 /* issueReport.php */; };
+		F5CDFF3F15D8996400C40543 /* whiteBtn.png in Resources */ = {isa = PBXBuildFile; fileRef = F5CDFF3D15D8996400C40543 /* whiteBtn.png */; };
+		F5CDFF4015D8996400C40543 /* whiteBtn@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F5CDFF3E15D8996400C40543 /* whiteBtn@2x.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +49,8 @@
 		F584BF8715CD91670005E1A5 /* LICENSE.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.md; sourceTree = SOURCE_ROOT; };
 		F584BF8815CD91670005E1A5 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = SOURCE_ROOT; };
 		F584BF8B15CD980E0005E1A5 /* issueReport.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; name = issueReport.php; path = PHP/issueReport.php; sourceTree = SOURCE_ROOT; };
+		F5CDFF3D15D8996400C40543 /* whiteBtn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = whiteBtn.png; sourceTree = "<group>"; };
+		F5CDFF3E15D8996400C40543 /* whiteBtn@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "whiteBtn@2x.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +128,7 @@
 				F584BF6F15CD86370005E1A5 /* MDContactForm.plist */,
 				F584BF7015CD86370005E1A5 /* MDContactFormViewController.h */,
 				F584BF7115CD86370005E1A5 /* MDContactFormViewController.m */,
+				F5CDFF3C15D8996400C40543 /* Images */,
 			);
 			name = "MDContactForm Source";
 			path = src;
@@ -146,6 +151,15 @@
 				F584BF8B15CD980E0005E1A5 /* issueReport.php */,
 			);
 			name = "Sample PHP Script";
+			sourceTree = "<group>";
+		};
+		F5CDFF3C15D8996400C40543 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				F5CDFF3D15D8996400C40543 /* whiteBtn.png */,
+				F5CDFF3E15D8996400C40543 /* whiteBtn@2x.png */,
+			);
+			path = Images;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -206,6 +220,8 @@
 				F584BF8915CD91670005E1A5 /* LICENSE.md in Resources */,
 				F584BF8A15CD91670005E1A5 /* README.md in Resources */,
 				F584BF8C15CD980E0005E1A5 /* issueReport.php in Resources */,
+				F5CDFF3F15D8996400C40543 /* whiteBtn.png in Resources */,
+				F5CDFF4015D8996400C40543 /* whiteBtn@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

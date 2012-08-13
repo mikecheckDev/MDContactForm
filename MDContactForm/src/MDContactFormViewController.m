@@ -14,7 +14,7 @@
 #pragma mark - Constants
 
 //Adjust this value to expand or squish all items vertically (For example, if you want everything to fit on a single page!)
-#define kVerticalSpacing 12.0f
+#define kVerticalSpacing 10.0f
 
 //Alignment constants
 #define kLeftLabelInset 10.0f
@@ -28,8 +28,8 @@
 
 #define kTextViewDefaultFontSize 14.0
 
-#define kSubmitButtonWidth 200.0
-#define kSubmitButtonHeight 40.0
+#define kSubmitButtonWidth 167.0
+#define kSubmitButtonHeight 56.0
 
 //Filename WITHOUT .plist extension
 #define kMDContactFormFileName @"MDContactForm"
@@ -156,9 +156,13 @@ typedef enum _MDFormInputTypes {
     
     //submit button
     CGRect submitButtonFrame = CGRectMake((self.contentView.frame.size.width - kSubmitButtonWidth) / 2.0f, self.contentView.frame.size.height + kVerticalSpacing, kSubmitButtonWidth, kSubmitButtonHeight);
-    UIButton *submit = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+    UIButton *submit = [UIButton buttonWithType:UIButtonTypeCustom];
     [submit setFrame:submitButtonFrame];
+    [submit setBackgroundImage:[UIImage imageNamed:@"whiteBtn.png"] forState:UIControlStateNormal];
     [submit setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [submit setTitleColor:[UIColor whiteColor] forState:UIControlStateHighlighted];
+    [submit setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
+    [submit.titleLabel setFont:[UIFont boldSystemFontOfSize:[UIFont systemFontSize]]];
     [submit setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
     [submit addTarget:self action:@selector(submitForm:) forControlEvents:UIControlEventTouchUpInside];
     
@@ -172,11 +176,11 @@ typedef enum _MDFormInputTypes {
     [self addView:submit];
     
     //bottom border
-    contentFrame = self.contentView.frame;
-    contentFrame.size.height += 2.0f * kVerticalSpacing;
-    self.contentView.frame = contentFrame;
-    self.scrollView.contentSize = self.contentView.bounds.size;
-    
+//    contentFrame = self.contentView.frame;
+//    contentFrame.size.height += 2.0f * kVerticalSpacing;
+//    self.contentView.frame = contentFrame;
+//    self.scrollView.contentSize = self.contentView.bounds.size;
+//    
     //backgroundTap
     UIButton *bgTap = [UIButton buttonWithType:UIButtonTypeCustom];
     bgTap.frame = CGRectMake(0.0, 0.0, self.contentView.bounds.size.width, self.contentView.bounds.size.height);
